@@ -52,48 +52,43 @@ class FileSystem {
       }
       // pwd, ls, cd, mkdir, vi, rm
       let command = strArr.shift().toLocaleLowerCase();
-      if (command == "pwd") {
-        console.log("/" + path.relative(this.rootDir, this.currentPath));
-        this.rl.prompt();
-        return;
-      }
-      if (command == "ls") {
-        fs.readdirSync(this.currentPath).forEach((file) => {
-          let filePath = path.relative(
-            this.rootDir,
-            path.join(this.currentPath, file)
-          );
-          if (filesData[filePath]) {
-            let { rights, owner } = filesData[filePath];
-            if (
-              (this.user == owner && rights.slice(2, 3) == "1") ||
-              (users[this.user] && users[this.user]?.isAdmin) ||
-              rights.slice(4, 5) == "1"
-            ) {
-              console.log(file);
+      switch (command) {
+        case "pwd":
+          console.log("/" + path.relative(this.rootDir, this.currentPath));
+          break;
+        case "ls":
+          fs.readdirSync(this.currentPath).forEach((file) => {
+            let filePath = path.relative(
+              this.rootDir,
+              path.join(this.currentPath, file)
+            );
+            if (filesData[filePath]) {
+              let { rights, owner } = filesData[filePath];
+              if (
+                (this.user == owner && rights.slice(2, 3) == "1") ||
+                (users[this.user] && users[this.user]?.isAdmin) ||
+                rights.slice(4, 5) == "1"
+              ) {
+                console.log(file);
+              }
             }
-          }
-        });
-        this.rl.prompt();
-        return;
-      }
-      if (command == "cd") {
-        let newPath = path.join(this.currentPath, strArr[0]) + '/';
-        let filePath = path.relative(this.rootDir, newPath);
-        if (!fs.existsSync(newPath) || !newPath.includes(this.rootDir)) {
-            console.log(newPath)
+          });
+          break;
+        case "cd":
+          let newPath = path.join(this.currentPath, strArr[0]) + "/";
+          let filePath = path.relative(this.rootDir, newPath);
+          if (!fs.existsSync(newPath) || !newPath.includes(this.rootDir)) {
+            console.log(newPath);
             console.log("cd: no such file or directory:", filePath);
-            this.rl.prompt();
-            return;
-        }
-        if(newPath == this.rootDir){
+            break;
+          }
+          if (newPath == this.rootDir) {
             this.prompt = this.user + "@" + "/" + "> ";
             this.currentPath = this.rootDir;
             this.rl.setPrompt(this.prompt);
-            this.rl.prompt();
-            return;
-        }
-        if (filesData[filePath]) {
+            break;
+          }
+          if (filesData[filePath]) {
             let { rights, owner } = filesData[filePath];
             if (
               (this.user == owner && rights.slice(2, 3) == "1") ||
@@ -104,19 +99,20 @@ class FileSystem {
               this.prompt =
                 this.user + "@" + path.basename(this.currentPath) + "> ";
               this.rl.setPrompt(this.prompt);
-            }else{
-                console.log("cd: you have no rights to view this folder:", filePath);
+            } else {
+              console.log(
+                "cd: you have no rights to view this folder:",
+                filePath
+              );
             }
-            this.rl.prompt();
-            return;
+            break;
           }
+        default:
+          break;
       }
-      //   console.log("command: ", command);
-
-      //   console.log(strArr);
-      //   console.log(`Received input: ${input}`);
 
       // Re-display input field
+      this.rl.prompt();
     });
   }
 }
