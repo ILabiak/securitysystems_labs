@@ -1,6 +1,10 @@
-[
-    {
-        "username": "test",
-        "passhash": "sdgdsgsdmflsmsdmflsenf3rfwlsd"
-    }
-]
+{
+  "test": {
+    "passhash": "sdgdsgsdmflsmsdmflsenf3rfwlsd",
+    "isAdmin": false
+  },
+  "admin" : {
+    "passhash": "pass",
+    "isAdmin": true
+  }
+}
