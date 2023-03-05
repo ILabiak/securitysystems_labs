@@ -6,7 +6,6 @@ const readline = require("readline");
 
 const users = require("./users.json");
 const filesData = require("./filesdata.json");
-const { dir } = require("console");
 
 // 11 11 00   (Read, Write rights for Admin, user (file owner), everyone else)
 
@@ -31,6 +30,13 @@ class FileSystem {
     });
     if (username && username.length > 0) {
       this.user = username;
+      if (!users[username]) {
+        users[username] = {
+          passhash: "123",
+          isAdmin: false,
+        };
+        fs.writeFileSync("./users.json", JSON.stringify(users));
+      }
     }
     // Set prompt
     this.prompt = this.user + "@" + "/" + "> ";
@@ -42,9 +48,9 @@ class FileSystem {
     this.rl.prompt();
   }
 
-  async processLines() {
+  processLines() {
     // Listen for input events
-    this.rl.on("line", async (input) => {
+    this.rl.on("line", (input) => {
       // Handle input here
       let strArr = input.split(" ");
       if (strArr[0].length < 1) {
@@ -82,6 +88,8 @@ class FileSystem {
           }
           this.removeFile(strArr[0]);
           break;
+        case "exit":
+          process.exit(1);
         default:
           break;
       }
@@ -203,7 +211,7 @@ class FileSystem {
       (users[this.user] && users[this.user]?.isAdmin) ||
       rights.slice(5, 6) == "1"
     ) {
-        fs.rmSync(filePath, {recursive: true})
+      fs.rmSync(filePath, { recursive: true });
       delete filesData[relativePath];
       fs.writeFileSync("./filesdata.json", JSON.stringify(filesData));
     } else {
