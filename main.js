@@ -37,14 +37,14 @@ class FileSystem {
     this.rl.setPrompt(this.prompt);
 
     // Start listening for input events
-    this.processLines();
+    await this.processLines();
 
     this.rl.prompt();
   }
 
-  processLines() {
+  async processLines() {
     // Listen for input events
-    this.rl.on("line", (input) => {
+    this.rl.on("line", async (input) => {
       // Handle input here
       let strArr = input.split(" ");
       if (strArr[0].length < 1) {
@@ -65,6 +65,15 @@ class FileSystem {
           break;
         case "mkdir":
           this.makeDir(strArr[0]);
+          break;
+        case "vi":
+          if (strArr.length < 2) {
+            console.log("Not enough arguments");
+            break;
+          }
+          const fileName = strArr.shift();
+          const fileContent = strArr.join(" ").replace(/\\n/g, '\n');
+          this.createAndEditFile(fileName, fileContent);
           break;
         default:
           break;
@@ -141,6 +150,35 @@ class FileSystem {
       rights: "111110",
     };
     fs.writeFileSync("./filesdata.json", JSON.stringify(filesData));
+  }
+
+  createAndEditFile(filePath, fileText) {
+    if (filePath.length < 1 || fileText.length < 1) return;
+    let fileFullPath = path.join(this.currentPath, filePath);
+    let relativePath = path.relative(this.rootDir, fileFullPath);
+    if (!fs.existsSync(fileFullPath) || !filesData[relativePath]) {
+      fs.writeFileSync(fileFullPath, fileText);
+      filesData[relativePath] = {
+        type: "file",
+        owner: this.user,
+        rights: "111100",
+      };
+      fs.writeFileSync("./filesdata.json", JSON.stringify(filesData));
+      return;
+    }
+    let { rights, owner } = filesData[relativePath];
+    if (
+      (this.user == owner && rights.slice(2, 4) == "11") ||
+      (users[this.user] && users[this.user]?.isAdmin) ||
+      rights.slice(4, 6) == "11"
+    ) {
+      fs.writeFileSync(fileFullPath, fileText);
+    } else {
+      console.log(
+        "cd: you have no rights to view and edit this file:",
+        relativePath
+      );
+    }
   }
 }
 
