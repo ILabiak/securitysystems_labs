@@ -68,12 +68,19 @@ class FileSystem {
           break;
         case "vi":
           if (strArr.length < 2) {
-            console.log("Not enough arguments");
+            console.log("Not enough arguments. vi [filename] [file content]");
             break;
           }
           const fileName = strArr.shift();
-          const fileContent = strArr.join(" ").replace(/\\n/g, '\n');
+          const fileContent = strArr.join(" ").replace(/\\n/g, "\n");
           this.createAndEditFile(fileName, fileContent);
+          break;
+
+        case "rm":
+          if (!strArr[0]) {
+            console.log("rm [file]");
+          }
+          this.removeFile(strArr[0]);
           break;
         default:
           break;
@@ -178,6 +185,29 @@ class FileSystem {
         "cd: you have no rights to view and edit this file:",
         relativePath
       );
+    }
+  }
+
+  removeFile(file) {
+    console.log("start", file);
+    let filePath = path.join(this.currentPath, file);
+    let relativePath = path.relative(this.rootDir, filePath);
+    if (!fs.existsSync(filePath) || !filesData[relativePath]) return;
+    let { rights, owner, type } = filesData[relativePath];
+    if (type == "drive") {
+      console.log("You can't delete a drive");
+      return;
+    }
+    if (
+      (this.user == owner && rights.slice(3, 4) == "1") ||
+      (users[this.user] && users[this.user]?.isAdmin) ||
+      rights.slice(5, 6) == "1"
+    ) {
+        fs.rmSync(filePath, {recursive: true})
+      delete filesData[relativePath];
+      fs.writeFileSync("./filesdata.json", JSON.stringify(filesData));
+    } else {
+      console.log("You have no rights to delete this file or folder");
     }
   }
 }
