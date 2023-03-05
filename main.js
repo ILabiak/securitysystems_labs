@@ -16,7 +16,7 @@ class FileSystem {
   constructor() {
     this.user = "";
     this.rootDir = path.join(__dirname + "/fs/");
-    this.currentPath = path.join(__dirname + "/fs/A");
+    this.currentPath = path.join(__dirname + "/fs/");
     this.prompt = "> ";
     this.rl = readline.createInterface({
       input: process.stdin,
@@ -78,8 +78,38 @@ class FileSystem {
         return;
       }
       if (command == "cd") {
-        console.log("CD command");
-        // return;
+        let newPath = path.join(this.currentPath, strArr[0]) + '/';
+        let filePath = path.relative(this.rootDir, newPath);
+        if (!fs.existsSync(newPath) || !newPath.includes(this.rootDir)) {
+            console.log(newPath)
+            console.log("cd: no such file or directory:", filePath);
+            this.rl.prompt();
+            return;
+        }
+        if(newPath == this.rootDir){
+            this.prompt = this.user + "@" + "/" + "> ";
+            this.currentPath = this.rootDir;
+            this.rl.setPrompt(this.prompt);
+            this.rl.prompt();
+            return;
+        }
+        if (filesData[filePath]) {
+            let { rights, owner } = filesData[filePath];
+            if (
+              (this.user == owner && rights.slice(2, 3) == "1") ||
+              (users[this.user] && users[this.user]?.isAdmin) ||
+              rights.slice(4, 5) == "1"
+            ) {
+              this.currentPath = newPath;
+              this.prompt =
+                this.user + "@" + path.basename(this.currentPath) + "> ";
+              this.rl.setPrompt(this.prompt);
+            }else{
+                console.log("cd: you have no rights to view this folder:", filePath);
+            }
+            this.rl.prompt();
+            return;
+          }
       }
       //   console.log("command: ", command);
 
