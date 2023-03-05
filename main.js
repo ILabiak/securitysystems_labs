@@ -6,6 +6,7 @@ const readline = require("readline");
 
 const users = require("./users.json");
 const filesData = require("./filesdata.json");
+const { dir } = require("console");
 
 // 11 11 00   (Read, Write rights for Admin, user (file owner), everyone else)
 
@@ -57,56 +58,14 @@ class FileSystem {
           console.log("/" + path.relative(this.rootDir, this.currentPath));
           break;
         case "ls":
-          fs.readdirSync(this.currentPath).forEach((file) => {
-            let filePath = path.relative(
-              this.rootDir,
-              path.join(this.currentPath, file)
-            );
-            if (filesData[filePath]) {
-              let { rights, owner } = filesData[filePath];
-              if (
-                (this.user == owner && rights.slice(2, 3) == "1") ||
-                (users[this.user] && users[this.user]?.isAdmin) ||
-                rights.slice(4, 5) == "1"
-              ) {
-                console.log(file);
-              }
-            }
-          });
+          this.listFiles();
           break;
         case "cd":
-          let newPath = path.join(this.currentPath, strArr[0]) + "/";
-          let filePath = path.relative(this.rootDir, newPath);
-          if (!fs.existsSync(newPath) || !newPath.includes(this.rootDir)) {
-            console.log(newPath);
-            console.log("cd: no such file or directory:", filePath);
-            break;
-          }
-          if (newPath == this.rootDir) {
-            this.prompt = this.user + "@" + "/" + "> ";
-            this.currentPath = this.rootDir;
-            this.rl.setPrompt(this.prompt);
-            break;
-          }
-          if (filesData[filePath]) {
-            let { rights, owner } = filesData[filePath];
-            if (
-              (this.user == owner && rights.slice(2, 3) == "1") ||
-              (users[this.user] && users[this.user]?.isAdmin) ||
-              rights.slice(4, 5) == "1"
-            ) {
-              this.currentPath = newPath;
-              this.prompt =
-                this.user + "@" + path.basename(this.currentPath) + "> ";
-              this.rl.setPrompt(this.prompt);
-            } else {
-              console.log(
-                "cd: you have no rights to view this folder:",
-                filePath
-              );
-            }
-            break;
-          }
+          this.changeDir(strArr[0]);
+          break;
+        case "mkdir":
+          this.makeDir(strArr[0]);
+          break;
         default:
           break;
       }
@@ -114,6 +73,74 @@ class FileSystem {
       // Re-display input field
       this.rl.prompt();
     });
+  }
+
+  listFiles() {
+    fs.readdirSync(this.currentPath).forEach((file) => {
+      let filePath = path.relative(
+        this.rootDir,
+        path.join(this.currentPath, file)
+      );
+      if (filesData[filePath]) {
+        let { rights, owner } = filesData[filePath];
+        if (
+          (this.user == owner && rights.slice(2, 3) == "1") ||
+          (users[this.user] && users[this.user]?.isAdmin) ||
+          rights.slice(4, 5) == "1"
+        ) {
+          console.log(file);
+        }
+      }
+    });
+  }
+
+  changeDir(dirName) {
+    if (!dirName || dirName.length < 1) return;
+    let newPath = path.join(this.currentPath, dirName) + "/";
+    let filePath = path.relative(this.rootDir, newPath);
+    if (!fs.existsSync(newPath) || !newPath.includes(this.rootDir)) {
+      console.log(newPath);
+      console.log("cd: no such file or directory:", filePath);
+      return;
+    }
+    if (newPath == this.rootDir) {
+      this.prompt = this.user + "@" + "/" + "> ";
+      this.currentPath = this.rootDir;
+      this.rl.setPrompt(this.prompt);
+      return;
+    }
+    if (filesData[filePath]) {
+      let { rights, owner } = filesData[filePath];
+      if (
+        (this.user == owner && rights.slice(2, 3) == "1") ||
+        (users[this.user] && users[this.user]?.isAdmin) ||
+        rights.slice(4, 5) == "1"
+      ) {
+        this.currentPath = newPath;
+        this.prompt = this.user + "@" + path.basename(this.currentPath) + "> ";
+        this.rl.setPrompt(this.prompt);
+      } else {
+        console.log("cd: you have no rights to view this folder:", filePath);
+      }
+    }
+  }
+
+  makeDir(dirName) {
+    if (!dirName || dirName.length < 1) return;
+    let newPath = path.join(this.currentPath, dirName) + "/";
+    let filePath = path.relative(this.rootDir, newPath);
+    if (filePath.length < 1) return;
+    if (fs.existsSync(newPath)) {
+      console.log(`mkdir: ${filePath}: File exists`);
+      return;
+    }
+    fs.mkdirSync(newPath);
+    filesData[filePath] = {
+      "type ": "folder",
+      owner: this.user,
+      rights: "111110",
+    };
+    fs.writeFileSync("./filesdata.json", JSON.stringify(filesData));
   }
 }
 
