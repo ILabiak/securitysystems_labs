@@ -3,5 +3,6 @@
   "B": { "type ": "drive", "owner": "admin", "rights": "111110" },
   "C": { "type ": "drive", "owner": "admin", "rights": "111110" },
   "A/fold": { "type ": "folder", "owner": "test", "rights": "111111" },
-  "A/test.txt": { "type ": "file", "owner": "test", "rights": "111111" }
+  "A/test.txt": { "type ": "file", "owner": "test", "rights": "111111" },
+  "A/fold/23": { "type ": "folder", "owner": "test", "rights": "111110" }
 }

@@ -197,7 +197,6 @@ class FileSystem {
   }
 
   removeFile(file) {
-    console.log("start", file);
     let filePath = path.join(this.currentPath, file);
     let relativePath = path.relative(this.rootDir, filePath);
     if (!fs.existsSync(filePath) || !filesData[relativePath]) return;
