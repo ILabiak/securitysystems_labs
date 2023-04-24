@@ -3,9 +3,13 @@
 const fs = require("fs");
 const path = require("path");
 const readline = require("readline");
+const bcrypt = require("bcrypt");
 
 const users = require("./users.json");
 const filesData = require("./filesdata.json");
+
+// regex for password validation (at least 8 characters, one letter and one number)
+const passwordRegex = new RegExp(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/);
 
 // 11 11 00   (Read, Write rights for Admin, user (file owner), everyone else)
 
@@ -31,11 +35,23 @@ class FileSystem {
     if (username && username.length > 0) {
       this.user = username;
       if (!users[username]) {
-        users[username] = {
-          passhash: "123",
-          isAdmin: false,
-        };
-        fs.writeFileSync("./users.json", JSON.stringify(users));
+        let createUser;
+        while (createUser != "n" && createUser != "y") {
+          createUser = await new Promise((resolve) => {
+            this.rl.question("Do you want to add new user? (y/n): ", resolve);
+          });
+          console.log("val: " + createUser);
+        }
+        if (createUser == "y") {
+          await this.addUser(username)
+        } else {
+          process.exit(1);
+        }
+        // users[username] = {
+        //   passhash: "123",
+        //   isAdmin: false,
+        // };
+        // fs.writeFileSync("./users.json", JSON.stringify(users));
       }
     }
     // Set prompt
@@ -216,6 +232,20 @@ class FileSystem {
     } else {
       console.log("You have no rights to delete this file or folder");
     }
+  }
+
+  async addUser(username) {
+    let password = "";
+    while (true){
+      password = await new Promise((resolve) => {
+        this.rl.question("Enter password for user " + username + ": ", resolve);
+      });
+      if(passwordRegex.test(password)){
+        break;
+      }
+      console.log('Your password should be at leas 8 characters and contain at least one character and one number. Try again')
+    }
+    console.log('password\'s good')
   }
 }
 
