@@ -2,5 +2,9 @@
   "test": { "passhash": "sdgdsgsdmflsmsdmflsenf3rfwlsd", "isAdmin": false },
   "admin": { "passhash": "pass", "isAdmin": true },
   "df": { "passhash": "123", "isAdmin": false },
-  "dfg": { "passhash": "123", "isAdmin": false }
+  "dfg": { "passhash": "123", "isAdmin": false },
+  "asf": {
+    "passhash": "$2b$10$MVXuTEl1N7RA2kQ7r5oLnu6ahY5BYkPs3.5JERb/k8BRuYHlNl.Ai",
+    "isAdmin": false
+  }
 }

@@ -43,7 +43,7 @@ class FileSystem {
           console.log("val: " + createUser);
         }
         if (createUser == "y") {
-          await this.addUser(username)
+          await this.addUser(username);
         } else {
           process.exit(1);
         }
@@ -236,16 +236,26 @@ class FileSystem {
 
   async addUser(username) {
     let password = "";
-    while (true){
+    while (true) {
       password = await new Promise((resolve) => {
         this.rl.question("Enter password for user " + username + ": ", resolve);
       });
-      if(passwordRegex.test(password)){
+      if (passwordRegex.test(password)) {
         break;
       }
-      console.log('Your password should be at leas 8 characters and contain at least one character and one number. Try again')
+      console.log(
+        "Your password should be at leas 8 characters and contain at least one character and one number. Try again"
+      );
     }
-    console.log('password\'s good')
+    bcrypt.hash(password, 10, function (err, hash) {
+      // console.log(hash);
+      users[username] = {
+        passhash: hash,
+        isAdmin: false,
+      };
+      fs.writeFileSync("./users.json", JSON.stringify(users));
+    });
+    console.log("User created succesfully!");
   }
 }
 
