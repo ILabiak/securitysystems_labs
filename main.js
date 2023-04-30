@@ -40,7 +40,6 @@ class FileSystem {
           createUser = await new Promise((resolve) => {
             this.rl.question("Do you want to add new user? (y/n): ", resolve);
           });
-          console.log("val: " + createUser);
         }
         if (createUser == "y") {
           await this.addUser(username);
@@ -52,6 +51,8 @@ class FileSystem {
         //   isAdmin: false,
         // };
         // fs.writeFileSync("./users.json", JSON.stringify(users));
+      } else {
+        await this.userLogIn(username);
       }
     }
     // Set prompt
@@ -139,7 +140,7 @@ class FileSystem {
     let newPath = path.join(this.currentPath, dirName) + "/";
     let filePath = path.relative(this.rootDir, newPath);
     if (!fs.existsSync(newPath) || !newPath.includes(this.rootDir)) {
-      console.log(newPath);
+      // console.log(newPath);
       console.log("cd: no such file or directory:", filePath);
       return;
     }
@@ -257,9 +258,32 @@ class FileSystem {
     });
     console.log("User created succesfully!");
   }
+
+  async userLogIn(username) {
+    let password = "";
+    let triesCounter = 0;
+    while (triesCounter <= 3) {
+      password = await new Promise((resolve) => {
+        this.rl.question("Enter password for user " + username + ": ", resolve);
+      });
+      const authenticated = await bcrypt.compare(
+        password,
+        users[username].passhash
+      );
+      if (authenticated) {
+        console.log("logged in successfully");
+        return;
+      }
+      triesCounter++;
+      console.log("This password's incorrect, please try again");
+    }
+    console.log("You've reached authentication limit, try again later");
+    process.exit(1);
+  }
 }
 
 (async () => {
   const fileSys = new FileSystem();
   await fileSys.start();
 })();
+// test1 test1234
